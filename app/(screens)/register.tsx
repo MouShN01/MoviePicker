@@ -28,7 +28,7 @@ const RegisterScreen = () => {
     return (
         <ImageBackground className="flex-1"
             resizeMode='cover'
-            source = {require("C:\\Users\\sasha\\MoviePicker\\assets\\images\\Bg_2var.jpg")}
+            source = {require("../../assets/images/Bg_2var.jpg")}
         >
             <View className="flex-1 justify-center items-center">
                 <Text className="font-bold text-2xl text-black">Sign Up</Text>
