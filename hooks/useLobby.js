@@ -1,9 +1,8 @@
 import { db, auth } from "../firebase"
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 
-export const createLobby = async () => {
+export const createLobby = async ({genre, type}) => {
     try{
-      console.log("function")
       const user = auth.currentUser;
       console.log("User:", user)
       if(!user)
@@ -17,6 +16,8 @@ export const createLobby = async () => {
         guestId: null,
         status: "waiting",
         createdAt: serverTimestamp(),
+        genre,
+        type,
       });
 
       console.log("Lobby create with ID: ", docRef.id);

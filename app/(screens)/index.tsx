@@ -8,21 +8,8 @@ const Index = () => {
   const {user, logout} = useAuth()
   if(!user) return null
 
-  const testFunc = async () => {
-    console.log("test");
-  };
-
-  const handleCreateLobby = async () => {
-    const lobbyId = await createLobby();
-    if(lobbyId)
-    {
-      console.log('Redirecting to waiting room for lobby: ', lobbyId);
-      router.push({pathname:"/waiting-room", params:{lobbyId}})
-    }
-    else
-    {
-      console.log("error");
-    }
+  const handleCreateLobby = () => {
+    router.replace("/create-lobby")
   };
 
   const handleLobbyList = () =>
