@@ -1,4 +1,4 @@
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useState } from 'react'
 import { createLobby } from '@/hooks/useLobby';
 import { router } from 'expo-router';
@@ -32,6 +32,7 @@ const LobbyCreateScreen = () => {
         const lobbyId = await createLobby({genre: selectedGenre, type:selectedType});
         if(lobbyId)
         {
+          console.log("Id:", lobbyId);
             router.push({pathname:"/waiting-room", params:{lobbyId},})
         }
         else
@@ -40,28 +41,44 @@ const LobbyCreateScreen = () => {
         }
     }
   return (
-    <View className=' flex-1 justify-center items-center'>
-      <Text className='font-bold text-3xl text-black'>Create a lobby</Text>
-      <Text className='text-2xl text-white'>Select a ganre</Text>
-      <RNPickerSelect
-        onValueChange={(value)=>setSelectedGenre(value)}
-        items={genres}
-        placeholder={{label:"Select a genre", value:null}}
-      />
+    <ImageBackground
+      className="flex-1"
+      resizeMode="cover"
+      source={require("../../assets/images/Bg_2var.jpg")}
+    >
+      <View className=' flex-1 justify-center items-center'>
+        <Text className='font-bold text-3xl text-black'>Create a lobby</Text>
+          <View className='w-full p-5'>
+            <Text className='text-2xl text-white ali'>Select a genre</Text>
+            <RNPickerSelect
+              onValueChange={(value)=>setSelectedGenre(value)}
+              items={genres}
+              placeholder={{label:"Select a genre", value:null}}
+              style={{
+                inputAndroid:{color:"black", backgroundColor:"white", borderWidth: 1, borderColor: "#ccc", borderRadius: 8},
+                inputIOS:{color:"black", backgroundColor:"white", borderWidth: 1, borderColor: "#ccc", borderRadius: 8}
+              }}
+            />
 
-      <Text className='text-2xl text-white'>Select Type:</Text>
-      <RNPickerSelect
-        onValueChange={(value)=>setSelectedType(value)}
-        items={types}
-        placeholder={{label:"Select a type", value:null}}
-      />
-      <TouchableOpacity
-        className="w-full rounded-lg mt-8 bg-black py-3"
-        onPress={handleCreateLobby}
-      >
-        <Text className="text-center text-white font-bold">Create Lobby</Text>
-      </TouchableOpacity>
-    </View>
+            <Text className='text-2xl text-white'>Select Type:</Text>
+            <RNPickerSelect
+              onValueChange={(value)=>setSelectedType(value)}
+              items={types}
+              placeholder={{label:"Select a type", value:null}}
+              style={{
+                inputAndroid:{color:"black", backgroundColor:"white"},
+                inputIOS:{color:"black", backgroundColor:"white"}
+              }}
+            />
+            <TouchableOpacity
+              className="w-full rounded-lg mt-8 bg-black py-3"
+              onPress={handleCreateLobby}
+            >
+              <Text className="text-center text-white font-bold">Create Lobby</Text>
+            </TouchableOpacity>
+          </View>
+      </View>
+    </ImageBackground>
   )
 }
 

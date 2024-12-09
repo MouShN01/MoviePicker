@@ -2,11 +2,6 @@ import { createContext, useContext, useEffect, useMemo, useState} from 'react'
 import {onAuthStateChanged, signOut} from 'firebase/auth'
 import {auth} from '../firebase'
 
-// type AuthContextType = {
-//     user:User;
-//     loading:boolean;
-// }
-
 const AuthContext = createContext();
 
 export const AuthProvider = ({children}) => {

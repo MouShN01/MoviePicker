@@ -1,23 +1,52 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, TouchableOpacity, Image } from "react-native";
+import { View, Text, ActivityIndicator, TouchableOpacity, Image, ImageBackground } from "react-native";
 import { useLocalSearchParams } from "expo-router";
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../firebase';
 import { fetchMoviesByGenreAndType } from "../../api/tmdbapi";
 import Swiper from "react-native-deck-swiper";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const MovieSwipeScreen = () => {
-  const { genreId, type, lobbyId } = useLocalSearchParams();
+  const { lobbyId } = useLocalSearchParams();
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchMovies = async () => {
+      console.log('id: ', lobbyId);
+      if (!lobbyId) {
+        console.log('No lobbyId provided.');
+        return;
+      }
+
+      // Fetch lobby details
+      const lobbyRef = doc(db, 'lobbies', lobbyId);
+      const lobbySnap = await getDoc(lobbyRef);
+
+      if (!lobbySnap.exists()) {
+        console.log('Lobby not found.');
+        return;
+      }
+
+      const lobbyData = lobbySnap.data();
+      const { genre, type } = lobbyData;
+
+      if (!genre || !type) {
+        console.log('Missing genre or type in lobby data.');
+        return;
+      }
+
+      console.log('Genre:', genre, 'Type:', type);
+
+      // Fetch movies based on genre and type
       setLoading(true);
-      const moviesData = await fetchMoviesByGenreAndType(genreId, type);
+      const moviesData = await fetchMoviesByGenreAndType(genre, type);
       setMovies(moviesData || []);
       setLoading(false);
     };
     fetchMovies();
-  }, [genreId, type]);
+  }, [lobbyId]);
 
   const handleSwipeRight = (index) => {
     const likedMovie = movies[index];
@@ -48,24 +77,35 @@ const MovieSwipeScreen = () => {
   }
 
   return (
-    <View className="flex-1 bg-gray-900 justify-center items-center">
-      <View className="absolute top-10">
-        <Text className="text-center text-white text-2xl font-bold mt-4 mb-2">
-          Swipe Movies
-        </Text>
+    <SafeAreaView className="flex-1">
+      <ImageBackground
+        className="flex-1"
+        resizeMode="cover"
+        source={require("../../assets/images/Bg_2var.jpg")}
+      >
+      <View className="flex-row items-center justify-center">
+        <Text className="text-2xl text-white font-bold">Movie Picker</Text>
       </View>
-      <View className="flex-1 justify-center items-center w-full h-full">
+      <View className="flex-1 -mt-6">
         <Swiper
-          containerStyle={{ flex: 1, justifyContent: "center", alignItems: "center" }} // Выравнивание
+          containerStyle={{
+            backgroundColor: "transparent",
+          }}
           cards={movies}
+          onSwipedRight={handleSwipeRight}
+          onSwipedLeft={handleSwipeLeft}
+          cardIndex={0}
+          stackSize={3}
+          animateCardOpacity
+          verticalSwipe={false}
           renderCard={(movie) => (
-            <View className="w-72 h-96 bg-white rounded-lg shadow-lg border-gray-300 overflow-hidden">
+            <View className="relative bg-white h-5/6 rounded-xl justify-center items-center shadow-xl">
               <Image
                 source={{
                   uri: `https://image.tmdb.org/t/p/w500${movie.poster_path}`,
                 }}
-                className="w-full h-2/3"
-                resizeMode="cover"
+                className="w-full h-4/6"
+                resizeMode="contain"
               />
               <View className="p-4">
                 <Text className="text-lg font-bold text-black">
@@ -80,13 +120,6 @@ const MovieSwipeScreen = () => {
               </View>
             </View>
           )}
-          onSwipedRight={handleSwipeRight}
-          onSwipedLeft={handleSwipeLeft}
-          cardIndex={0}
-          backgroundColor="transparent"
-          stackSize={3}
-          animateCardOpacity
-          verticalSwipe={false}
           overlayLabels={{
             left: {
               title: "NOPE",
@@ -125,7 +158,8 @@ const MovieSwipeScreen = () => {
           }}
         />
       </View>
-    </View>
+    </ImageBackground>
+    </SafeAreaView>
   );
 };
 

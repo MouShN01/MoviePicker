@@ -35,7 +35,7 @@ const LobbyList = () => {
       });
 
       Alert.alert('Success', `Request sent to join lobby: ${lobbyId}`);
-      router.replace("/pick");
+      router.push({pathname:"/pick", params:{lobbyId},});
     } catch (error) {
       console.error('Error joining lobby:', error);
       Alert.alert('Error', 'Failed to join lobby. Please try again.');
@@ -59,7 +59,8 @@ const LobbyList = () => {
               onPress={() => joinLobby(item.id)}
             >
               <Text className="text-lg font-bold text-white">Host: {item.hostId}</Text>
-              <Text className="text-md font-bold text-white">Status: {item.status}</Text>
+              <Text className="text-md font-bold text-white">Type: {item.type}</Text>
+              <Text className="text-md font-bold text-white">Genre: {item.genre}</Text>
             </TouchableOpacity>
           )}
         />
