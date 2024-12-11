@@ -16,7 +16,7 @@ const WaitingRoomScreen = () => {
             if(data && data.guestId)
             {
                 setStatus("connected");
-                router.push({pathname:"/pick", params:{lobbyId},});
+                router.replace({pathname:"/pick", params:{lobbyId},});
             }
         });
 

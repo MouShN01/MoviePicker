@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, TouchableOpacity, Image, ImageBackground } from "react-native";
+import { View, Text, ActivityIndicator, TouchableOpacity, Image, ImageBackground, Alert } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../../firebase';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { auth, db } from '../../firebase';
 import { fetchMoviesByGenreAndType } from "../../api/tmdbapi";
 import Swiper from "react-native-deck-swiper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { addVote } from '../../utils/addVote'
 
 const MovieSwipeScreen = () => {
   const { lobbyId } = useLocalSearchParams();
@@ -48,8 +49,52 @@ const MovieSwipeScreen = () => {
     fetchMovies();
   }, [lobbyId]);
 
-  const handleSwipeRight = (index) => {
+  useEffect(()=>{
+    if(!lobbyId) return;
+
+    const lobbyRef = doc(db, "lobbies", lobbyId);
+
+    const unsubscribe = onSnapshot(lobbyRef, (snapshot) =>{
+      if(!snapshot.exists()) return;
+
+      const lobbyData = snapshot.data();
+      const votes = lobbyData.votes || {};
+      const currentUserId = auth.currentUser?.uid;
+
+      const otherUsersVotes = Object.entries(votes)
+        .filter(([userId])=>userId!==currentUserId)
+        .map(([, userVotes])=>userVotes);
+
+      if(otherUsersVotes.length === 0) return;
+
+      const commonMovies = otherUsersVotes.reduce((acc, userVotes)=>{
+        if(!acc) return new Set(userVotes);
+        return new Set([...acc].filter((movie)=>userVotes.includes(movie)));
+      }, null);
+
+      if(commonMovies && commonMovies.size > 0){
+        const matchedMovieId = [...commonMovies][0];
+        const matchedMovie = movies.find((movie)=>movie.id===matchedMovieId);
+
+        if(matchedMovie)
+        {
+          Alert.alert(
+            "Match found!",
+            `You both liked the movie: ${matchedMovie.title || matchedMovie.name}`
+          );
+        }
+      }
+    });
+    return ()=>unsubscribe()
+  }, [lobbyId, movies]);
+
+  const handleSwipeRight = async (index) => {
     const likedMovie = movies[index];
+    const result = await addVote(lobbyId, likedMovie.id);
+    if(result.success)
+    {
+      Alert.alert("Match found!", `You both liked the movie: ${result.movieId}`);
+    }
     console.log("Liked: ", likedMovie?.title || likedMovie?.name);
   };
 

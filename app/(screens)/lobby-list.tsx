@@ -3,15 +3,17 @@ import { useEffect, useState } from 'react';
 import { db, auth } from '../../firebase';
 import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { router } from 'expo-router';
+import useAuth from '../../hooks/useAuth'
 
 const LobbyList = () => {
   const [lobbies, setLobbies] = useState([]);
+  const { user } = useAuth();
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'lobbies'), (snapshot) => {
       const availableLobbies = snapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() }))
-        .filter((lobby) => lobby.status === 'waiting'); // Фильтруем только доступные лобби
+        .filter((lobby) => lobby.status === 'waiting' && lobby.hostId !== user.uid); // Фильтруем только доступные лобби
       setLobbies(availableLobbies);
     });
 
@@ -31,11 +33,11 @@ const LobbyList = () => {
       // Обновляем лобби, добавляя guestId
       await updateDoc(lobbyRef, {
         guestId: user.uid,
-        status: "connected"
+        status: "connected",
       });
 
       Alert.alert('Success', `Request sent to join lobby: ${lobbyId}`);
-      router.push({pathname:"/pick", params:{lobbyId},});
+      router.replace({pathname:"/pick", params:{lobbyId},});
     } catch (error) {
       console.error('Error joining lobby:', error);
       Alert.alert('Error', 'Failed to join lobby. Please try again.');

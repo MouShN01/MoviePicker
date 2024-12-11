@@ -18,6 +18,7 @@ export const createLobby = async ({genre, type}) => {
         createdAt: serverTimestamp(),
         genre,
         type,
+        votes:{},
       });
 
       console.log("Lobby create with ID: ", docRef.id);
