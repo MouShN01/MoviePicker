@@ -5,10 +5,8 @@ const BASE_URL = "https://api.themoviedb.org/3";
 
 export const fetchMoviesByGenreAndType = async (genreId, type) => {
   try {
-    // Убедимся, что параметры корректны
     const endpoint = type === "tv" ? "discover/tv" : "discover/movie";
 
-    // Логируем параметры для проверки
     console.log("Fetching movies with genre:", genreId, "and type:", type);
 
     const response = await axios.get(`${BASE_URL}/${endpoint}`, {

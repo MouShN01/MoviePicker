@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { createLobby } from '@/hooks/useLobby';
 import { router } from 'expo-router';
 import RNPickerSelect from 'react-native-picker-select'
+import Icon from 'react-native-vector-icons/Ionicons'
 
 const LobbyCreateScreen = () => {
     const [selectedGenre, setSelectedGenre] = useState(null);
@@ -13,13 +14,12 @@ const LobbyCreateScreen = () => {
         {label:"Comedy", value:"35"},
         {label:"Drama", value:"18"},
         {label:"Horror", value:"27"},
-        {label:"Anumation", value:"16"},
+        {label:"Animation", value:"16"},
     ];
 
     const types = [
         {label:"Movie", value:"movie"},
         {label:"TV Show", value:"tv"},
-        {label:"Cartoon", value:"cartoon"},
     ];
 
     const handleCreateLobby = async ()=>{
@@ -47,6 +47,12 @@ const LobbyCreateScreen = () => {
       source={require("../../assets/images/Bg_2var.jpg")}
     >
       <View className=' flex-1 justify-center items-center'>
+        <TouchableOpacity
+          className="absolute top-4 left-4 w-12 h-12 bg-black rounded-full justify-center items-center"
+          onPress={()=>router.replace("/")}
+        >
+          <Icon name="arrow-back" color="white" size={24}/>
+        </TouchableOpacity>
         <Text className='font-bold text-3xl text-black'>Create a lobby</Text>
           <View className='w-full p-5'>
             <Text className='text-2xl text-white ali'>Select a genre</Text>

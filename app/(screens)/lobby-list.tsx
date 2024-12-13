@@ -1,19 +1,32 @@
 import { View, Text, FlatList, TouchableOpacity, Alert, ImageBackground } from 'react-native';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { db, auth } from '../../firebase';
 import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { router } from 'expo-router';
 import useAuth from '../../hooks/useAuth'
+import Icon from 'react-native-vector-icons/Ionicons'
 
 const LobbyList = () => {
   const [lobbies, setLobbies] = useState([]);
   const { user } = useAuth();
+  const genreMap = {
+    "28": "Action",
+    "35": "Comedy",
+    "18": "Drama",
+    "27": "Horror",
+    "16": "Animation",
+  };
+  
+  const typeMap = {
+    "movie": "Movie",
+    "tv": "TV Show",
+  };
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'lobbies'), (snapshot) => {
       const availableLobbies = snapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() }))
-        .filter((lobby) => lobby.status === 'waiting' && lobby.hostId !== user.uid); // Фильтруем только доступные лобби
+        .filter((lobby) => lobby.status === 'waiting' && lobby.hostId !== user.uid);
       setLobbies(availableLobbies);
     });
 
@@ -30,7 +43,6 @@ const LobbyList = () => {
 
       const lobbyRef = doc(db, 'lobbies', lobbyId);
 
-      // Обновляем лобби, добавляя guestId
       await updateDoc(lobbyRef, {
         guestId: user.uid,
         status: "connected",
@@ -50,19 +62,28 @@ const LobbyList = () => {
       resizeMode="cover"
       source={require("../../assets/images/Bg_2var.jpg")}
     >
-      <View className="flex-1 p-4">
-        <Text className="text-2xl text-white font-bold mb-4">Available Lobbies</Text>
+      <View className="flex-1">
+        <View className="absolute top-4 left-4 flex-row items-center z-10">
+          <TouchableOpacity
+            className="w-12 h-12 bg-black rounded-full justify-center items-center"
+            onPress={() => router.replace("/")}
+          >
+            <Icon name="arrow-back" color="white" size={24} />
+          </TouchableOpacity>
+          <Text className="ml-4 text-2xl text-white font-bold">Available Lobbies</Text>
+        </View>
         <FlatList
           data={lobbies}
+          contentContainerStyle={{paddingHorizontal: 16, padding:80}}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <TouchableOpacity
-              className="p-4 bg-gray-900 mb-4 rounded-lg"
+              className="p-4 bg-gray-900 mb-4 rounded-lg w-full"
               onPress={() => joinLobby(item.id)}
             >
-              <Text className="text-lg font-bold text-white">Host: {item.hostId}</Text>
-              <Text className="text-md font-bold text-white">Type: {item.type}</Text>
-              <Text className="text-md font-bold text-white">Genre: {item.genre}</Text>
+              <Text className="text-lg font-bold text-white">Host: {item.hostName}</Text>
+              <Text className="text-md font-bold text-white">Type: {typeMap[item.type]}</Text>
+              <Text className="text-md font-bold text-white">Genre: {genreMap[item.genre]}</Text>
             </TouchableOpacity>
           )}
         />

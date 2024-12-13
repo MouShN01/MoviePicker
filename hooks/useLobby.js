@@ -13,6 +13,7 @@ export const createLobby = async ({genre, type}) => {
 
       const docRef = await addDoc(collection(db, "lobbies"), {
         hostId:user.uid,
+        hostName:user.displayName,
         guestId: null,
         status: "waiting",
         createdAt: serverTimestamp(),
