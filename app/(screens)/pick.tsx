@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ActivityIndicator, TouchableOpacity, Image, ImageBackground, Alert, Modal, ScrollView } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { deleteDoc, doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { deleteDoc, doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
 import { fetchMoviesByGenreAndType } from "../../api/tmdbapi";
 import Swiper from "react-native-deck-swiper";
@@ -23,7 +23,6 @@ const MovieSwipeScreen = () => {
         return;
       }
 
-      // Fetch lobby details
       const lobbyRef = doc(db, 'lobbies', lobbyId);
       const lobbySnap = await getDoc(lobbyRef);
 
@@ -42,7 +41,6 @@ const MovieSwipeScreen = () => {
 
       console.log('Genre:', genre, 'Type:', type);
 
-      // Fetch movies based on genre and type
       setLoading(true);
       const moviesData = await fetchMoviesByGenreAndType(genre, type);
       setMovies(moviesData || []);
@@ -74,15 +72,6 @@ const MovieSwipeScreen = () => {
 
       if(otherUsersVotes.length === 0) return;
 
-      // const commonMovies = otherUsersVotes.reduce((acc, userVotes)=>{
-      //   if(!acc) return new Set(userVotes);
-      //   return new Set([...acc].filter((movie)=>userVotes.includes(movie)));
-      // }, null);
-
-      // if(commonMovies && commonMovies.size > 0){
-      //   const matchedMovieId = [...commonMovies][0];
-      //   const matchedMovie = movies.find((movie)=>movie.id===matchedMovieId);
-
       const matchedMovieId = currentUserVotes.find((movieId)=> otherUsersVotes.includes(movieId));
 
         if(matchedMovieId)
@@ -97,6 +86,30 @@ const MovieSwipeScreen = () => {
     });
     return ()=>unsubscribe()
   }, [lobbyId, movies]);
+
+  useEffect(() => {
+    if (!lobbyId) return;
+  
+    const lobbyRef = doc(db, "lobbies", lobbyId);
+  
+    const unsubscribe = onSnapshot(lobbyRef, async (snapshot) => {
+      if (!snapshot.exists()) return;
+  
+      const lobbyData = snapshot.data();
+  
+      if (lobbyData.status === "closed") {
+        try {
+          await deleteDoc(lobbyRef);
+          router.push("/");
+          console.log("Lobby deleted due to closed status.");
+        } catch (error) {
+          console.error("Error deleting lobby:", error);
+        }
+      }
+    });
+  
+    return () => unsubscribe();
+  }, [lobbyId]);
 
   const handleSwipeRight = async (index) => {
     const likedMovie = movies[index];
@@ -117,10 +130,9 @@ const MovieSwipeScreen = () => {
     try {
       if (lobbyId) {
         const lobbyRef = doc(db, "lobbies", lobbyId);
-        await deleteDoc(lobbyRef); 
+        await updateDoc(lobbyRef, { status: "closed" });
+        setModalVisible(false);  
       }
-      setModalVisible(false);
-      router.push("/"); 
     } catch (error) {
       console.error("Error deleting lobby or navigating:", error);
     }
@@ -225,6 +237,14 @@ const MovieSwipeScreen = () => {
             },
           }}
         />
+      </View>
+      <View className="flex-1 justify-center items-center">
+        <TouchableOpacity
+          className="absolute bottom-1 w-5/6 left-1/8 rounded-lg bg-black py-3"
+          onPress={handleExit}
+        >
+          <Text className="text-center text-white font-bold">Leave Lobby</Text>
+        </TouchableOpacity>
       </View>
     </ImageBackground>
     {matchedMovie && (

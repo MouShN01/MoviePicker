@@ -10,14 +10,6 @@ export const addVote = async (lobbyId, movieId) => {
         [`votes.${user.uid}`]:arrayUnion(movieId),
     });
 
-    // const lobbySnapshot = await getDoc(lobbyRef);
-    // const lobbyData = lobbySnapshot.data();
-    
-    // const otherUserId = Object.keys(lobbyData.votes).find((id)=>id!==user?.uid);
-    // if(otherUserId && lobbyData.votes[otherUserId]?.includes(movieId))
-    // {
-    //     return{success: true, movieId};
-    // }
   }catch(error){
     console.error("Error handling swipe right:", error);
   }

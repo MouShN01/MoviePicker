@@ -47,8 +47,6 @@ const LobbyList = () => {
         guestId: user.uid,
         status: "connected",
       });
-
-      Alert.alert('Success', `Request sent to join lobby: ${lobbyId}`);
       router.replace({pathname:"/pick", params:{lobbyId},});
     } catch (error) {
       console.error('Error joining lobby:', error);
