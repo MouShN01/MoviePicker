@@ -3,7 +3,7 @@ import axios from "axios";
 const API_KEY = "94f34062cbb7aa801e41e62748bc8cb8";
 const BASE_URL = "https://api.themoviedb.org/3";
 
-export const fetchMoviesByGenreAndType = async (genreId, type) => {
+export const fetchMoviesByGenreAndType = async (genreId:string, type:string, page: number = 1) => {
   try {
     const endpoint = type === "tv" ? "discover/tv" : "discover/movie";
 
@@ -15,6 +15,7 @@ export const fetchMoviesByGenreAndType = async (genreId, type) => {
         with_genres: genreId,
         language: "en-US",
         sort_by: "popularity.desc",
+        page
       },
     });
 

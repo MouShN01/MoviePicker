@@ -8,7 +8,7 @@ import Icon from "react-native-vector-icons/Ionicons"
 
 const WaitingRoomScreen = () => {
     const [status, setStatus] = useState('waiting');
-    const { lobbyId } = useLocalSearchParams();
+    const { lobbyId } = useLocalSearchParams<{lobbyId:string}>();
 
     useEffect(()=>{
       console.log(lobbyId)

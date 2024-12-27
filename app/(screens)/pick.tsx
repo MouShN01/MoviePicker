@@ -8,18 +8,32 @@ import Swiper from "react-native-deck-swiper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { addVote } from '../../utils/addVote'
 
+type Movie = {
+  id: string;
+  title?: string;
+  name?: string;
+  poster_path?: string;
+  vote_average?: number;
+  overview?: string;
+};
+
 const MovieSwipeScreen = () => {
-  const { lobbyId } = useLocalSearchParams();
-  const [movies, setMovies] = useState([]);
+  const { lobbyId } = useLocalSearchParams<{lobbyId:string}>();
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [likedMovies, setlikedMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [matchedMovie, setMatchedMovie] = useState(null);
+  const [page, setPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [noMoreMovies, setNoMoreMovies] = useState(false);
+  const [genre, setGenre] = useState<string | null>(null);
+  const [type, setType] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchMovies = async () => {
-      console.log('id: ', lobbyId);
-      if (!lobbyId) {
-        console.log('No lobbyId provided.');
+    const fetchLobbyData = async () => {
+      if (!lobbyId || Array.isArray(lobbyId)) {
+        console.log('Invalid lobbyId provided.');
         return;
       }
 
@@ -39,18 +53,26 @@ const MovieSwipeScreen = () => {
         return;
       }
 
+      setGenre(genre);
+      setType(type);
+
       console.log('Genre:', genre, 'Type:', type);
 
       setLoading(true);
-      const moviesData = await fetchMoviesByGenreAndType(genre, type);
+      const moviesData = await fetchMoviesByGenreAndType(genre, type, 1);
       setMovies(moviesData || []);
       setLoading(false);
     };
-    fetchMovies();
+
+    fetchLobbyData();
   }, [lobbyId]);
 
   useEffect(()=>{
-    if(!lobbyId) return;
+
+    if (!lobbyId || Array.isArray(lobbyId)) {
+        console.log('Invalid lobbyId provided.');
+        return;
+      }
 
     const lobbyRef = doc(db, "lobbies", lobbyId);
 
@@ -63,7 +85,7 @@ const MovieSwipeScreen = () => {
 
       if(!currentUserId) return;
 
-      const currentUserVotes = votes[currentUserId] || [];
+      const currentUserVotes:string[] = votes[currentUserId] || [];
       if (currentUserVotes.length === 0) return;
 
       const otherUsersVotes = Object.entries(votes)
@@ -76,7 +98,7 @@ const MovieSwipeScreen = () => {
 
         if(matchedMovieId)
         {
-          const movie = movies.find((m)=>m.id === matchedMovieId);
+          const movie = movies.find((m:{id:string})=>m.id === matchedMovieId);
           if(movie)
           {
             setMatchedMovie(movie);
@@ -88,8 +110,11 @@ const MovieSwipeScreen = () => {
   }, [lobbyId, movies]);
 
   useEffect(() => {
-    if (!lobbyId) return;
-  
+    if (!lobbyId || Array.isArray(lobbyId)) {
+        console.log('Invalid lobbyId provided.');
+        return;
+      }
+    
     const lobbyRef = doc(db, "lobbies", lobbyId);
   
     const unsubscribe = onSnapshot(lobbyRef, async (snapshot) => {
@@ -111,19 +136,40 @@ const MovieSwipeScreen = () => {
     return () => unsubscribe();
   }, [lobbyId]);
 
-  const handleSwipeRight = async (index) => {
+  const handleSwipeRight = async (index:number) => {
     const likedMovie = movies[index];
+    setlikedMovies((prevMovies) => [...prevMovies, likedMovie]);
     const result = await addVote(lobbyId, likedMovie.id);
-    if(result.success)
-    {
-      Alert.alert("Match found!", `You both liked the movie: ${result.movieId}`);
-    }
     console.log("Liked: ", likedMovie?.title || likedMovie?.name);
   };
 
-  const handleSwipeLeft = (index) => {
+  const handleSwipeLeft = (index:number) => {
     const dislikedMovie = movies[index];
     console.log("Disliked: ", dislikedMovie?.title || dislikedMovie?.name);
+  };
+
+  const handleEndReached = async () => {
+    if (loadingMore || noMoreMovies || !genre || !type) return;
+  
+    setLoadingMore(true);
+    try {
+      const nextPageMovies = await fetchMoviesByGenreAndType(genre, type, page + 1);
+      console.log(nextPageMovies);
+  
+      if (nextPageMovies.length === 0) {
+        setNoMoreMovies(true);
+      } else {
+        setMovies([]);
+        setTimeout(() => {
+          setMovies(nextPageMovies);
+          setPage((prevPage) => prevPage + 1);
+      }, 0);
+      }
+    } catch (error) {
+      console.error("Error loading more movies:", error);
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
   const handleExit = async () => {
@@ -168,12 +214,14 @@ const MovieSwipeScreen = () => {
       </View>
       <View className="flex-1 -mt-6">
         <Swiper
+          key={movies.length}
           containerStyle={{
             backgroundColor: "transparent",
           }}
           cards={movies}
           onSwipedRight={handleSwipeRight}
           onSwipedLeft={handleSwipeLeft}
+          onSwipedAll={handleEndReached}
           cardIndex={0}
           stackSize={3}
           animateCardOpacity

@@ -37,7 +37,6 @@ const LoginScreen = () => {
                     keyboardType="email-address"
                     className=
                         "bg-gray-50 border border-gray-300 text-sm text-gray-900 rounded-lg w-full p-2.5 mb-4"
-                        
                         value={email}
                         onChangeText={(text)=>setEmail(text)}
                     />

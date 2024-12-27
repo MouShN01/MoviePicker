@@ -1,7 +1,7 @@
 import { router, SplashScreen, Stack } from "expo-router";
 import "../global.css";
-import { ReactNode, useEffect } from "react"; // Import ReactNode for typing children
-import useAuth, { AuthProvider } from "../hooks/useAuth"; // Assuming useAuth and AuthProvider are typed correctly
+import { ReactNode, useEffect } from "react";
+import useAuth, { AuthProvider } from "../hooks/useAuth";
 
 export default function RootLayout() {
   return(
